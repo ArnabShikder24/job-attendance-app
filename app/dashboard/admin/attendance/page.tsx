@@ -1,53 +1,79 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AttendanceForm } from "@/components/forms/attendance-form";
+import { AttendanceAIForm } from "@/components/forms/attendance-ai-form";
+import { AttendanceTable } from "@/components/tables/attendance-table";
+import { Button } from "@/components/ui/button";
 
-interface AttendanceRecord {
-  user: string;
-  date: string;
-  status: string;
-}
+export default function TeamAttendancePage() {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("manual");
 
-async function getAttendanceData(): Promise<AttendanceRecord[]> {
-  try {
-    const res = await fetch("/api/attendance/all", { cache: "no-store" });
-    if (!res.ok) throw new Error("Failed to fetch");
-    return res.json();
-  } catch (e) {
-    return [];
-  }
-}
+  // When a date is clicked, open the dialog
+  const handleDayClick = (date: Date) => {
+    setSelectedDate(date);
+    setDialogOpen(true);
+  };
 
-export default async function TeamAttendancePage() {
-  const data = await getAttendanceData();
+  // For AttendanceForm, pass the selected date as a prop (if needed)
+  // For now, AttendanceForm uses today's date by default, but you can enhance it to accept a date prop
 
   return (
     <DashboardLayout>
-      <div className="p-6">
+      <div className="p-6 max-w-5xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">Attendance</h1>
+        {/* Calendar */}
+        <div className="mb-8 bg-white dark:bg-gray-900 p-4 rounded shadow">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onDayClick={handleDayClick}
+            className="mx-auto"
+          />
+        </div>
         <h1 className="text-2xl font-bold mb-4">Team Attendance</h1>
-        {data.length === 0 ? (
-          <div>No attendance records found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 border">User</th>
-                  <th className="px-4 py-2 border">Date</th>
-                  <th className="px-4 py-2 border">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((record, idx) => (
-                  <tr key={idx}>
-                    <td className="px-4 py-2 border">{record.user}</td>
-                    <td className="px-4 py-2 border">{record.date}</td>
-                    <td className="px-4 py-2 border">{record.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* Dialog for attendance form */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {selectedDate ? `Attendance for ${selectedDate.toLocaleDateString()}` : "Attendance"}
+              </DialogTitle>
+            </DialogHeader>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
+              <TabsList className="w-full">
+                <TabsTrigger value="manual" className="flex-1">Manual Entry</TabsTrigger>
+                <TabsTrigger value="ai" className="flex-1">AI (Coming Soon)</TabsTrigger>
+              </TabsList>
+              <TabsContent value="manual">
+                {/* You can enhance AttendanceForm to accept a date prop */}
+                <AttendanceForm />
+              </TabsContent>
+              <TabsContent value="ai">
+                <AttendanceAIForm />
+              </TabsContent>
+            </Tabs>
+            <DialogClose asChild>
+              <Button variant="outline" className="mt-4 w-full">Close</Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+        {/* Team Attendance Table */}
+        <div className="mt-10">
+          <AttendanceTable isAdmin />
+        </div>
       </div>
     </DashboardLayout>
   );
