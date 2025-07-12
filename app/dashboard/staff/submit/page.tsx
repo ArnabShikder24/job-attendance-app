@@ -43,6 +43,7 @@ export default function SubmitAttendance() {
             className="mx-auto"
           />
         </div>
+        
         {/* Dialog for attendance form */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
@@ -69,6 +70,11 @@ export default function SubmitAttendance() {
             </DialogClose>
           </DialogContent>
         </Dialog>
+
+        {/* My Attendance Records */}
+        <div className="mt-10">
+          <AttendanceTable isAdmin={false} />
+        </div>
       </div>
     </DashboardLayout>
   );
